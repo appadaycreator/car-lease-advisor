@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>カーリース vs 購入診断 - どっちがお得か無料シミュレーション</title>
+<meta name="description" content="車の購入方法（カーリース・ローン購入・一括購入）を比較。乗りたい車・月額予算・使用年数を入力するだけで総費用・月額コストを比較して最適な方法を診断します。">
+<meta property="og:title" content="カーリース vs 購入診断 | どっちがお得か無料シミュレーション">
+<meta property="og:description" content="カーリース・ローン購入・一括購入の総費用・月額コストを比較診断。">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://appadaycreator.github.io/car-lease-advisor/">
+<meta property="og:image" content="https://appadaycreator.github.io/car-lease-advisor/ogp.png">
+<link rel="canonical" href="https://appadaycreator.github.io/car-lease-advisor/">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"カーリース vs 購入診断","description":"車の購入方法を比較シミュレーション","url":"https://appadaycreator.github.io/car-lease-advisor/","applicationCategory":"FinanceApplication","operatingSystem":"Any","offers":{"@type":"Offer","price":"0","priceCurrency":"JPY"}}</script>
+<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-TXQGZRF9');</script>
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8427583028015858" crossorigin="anonymous"></script>
+<script type="text/javascript">(function(c,l,a,r,i,t,y){c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y)})(window,document,"clarity","script","s3t9vl8h3v");</script>
+<script>window.onerror=function(m,s,l,c,e){console.warn('Error:',m);return true;};window.addEventListener('unhandledrejection',function(e){console.warn('Rejection:',e.reason);});</script>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  body{background:linear-gradient(135deg,#eff6ff 0%,#dbeafe 50%,#bfdbfe 100%);min-height:100vh;}
+  .card{background:white;border-radius:1rem;box-shadow:0 4px 24px rgba(0,0,0,0.09);}
+  .btn-primary{background:#2563eb;color:white;border:none;border-radius:.75rem;padding:.875rem 2rem;font-size:1.05rem;font-weight:700;cursor:pointer;transition:all .2s;width:100%;display:block;}
+  .btn-primary:hover{background:#1d4ed8;transform:translateY(-1px);}
+  .input-field{border:2px solid #dbeafe;border-radius:.75rem;padding:.75rem 1rem;font-size:1rem;width:100%;box-sizing:border-box;}
+  .input-field:focus{outline:none;border-color:#2563eb;}
+  label{display:block;font-size:.875rem;font-weight:600;color:#374151;margin-bottom:.375rem;}
+  select.input-field{appearance:none;background:white;}
+  .compare-card{border:2px solid #e5e7eb;border-radius:1rem;padding:1rem;text-align:center;}
+  .compare-card.best{border-color:#2563eb;background:#eff6ff;}
+  .compare-label{font-size:.75rem;color:#6b7280;margin-bottom:.25rem;}
+  .compare-value{font-size:1.25rem;font-weight:700;color:#2563eb;}
+  .compare-card.best .compare-label{color:#1e40af;}
+</style>
+</head>
+<body class="font-sans">
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-TXQGZRF9" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+<div class="max-w-lg mx-auto px-4 py-10">
+  <div class="text-center mb-8">
+    <div class="text-6xl mb-4">🚗</div>
+    <h1 class="text-2xl font-bold text-gray-800 mb-2">カーリース vs 購入診断</h1>
+    <p class="text-gray-600 text-sm">車の購入方法を比較して<br>あなたに最適な方法を無料診断</p>
+  </div>
+
+  <div class="card p-6 mb-6">
+    <h2 class="font-bold text-gray-800 mb-4">🚘 条件を入力してください</h2>
+    <div class="space-y-4">
+      <div>
+        <label>乗りたい車のクラス・価格帯</label>
+        <select id="car-class" class="input-field">
+          <option value="kei">軽自動車（〜120万円）</option>
+          <option value="compact" selected>コンパクトカー（120〜200万円）</option>
+          <option value="sedan">セダン・ミニバン（200〜350万円）</option>
+          <option value="suv">SUV・高級車（350万円〜）</option>
+        </select>
+      </div>
+      <div>
+        <label>使用予定年数</label>
+        <select id="use-years" class="input-field">
+          <option value="3">3年（短期）</option>
+          <option value="5" selected>5年（標準）</option>
+          <option value="7">7年</option>
+          <option value="10">10年（長期保有）</option>
+        </select>
+      </div>
+      <div>
+        <label>頭金・初期費用に使える額（万円）</label>
+        <input type="number" id="down-payment" class="input-field" placeholder="例: 30（ない場合は0）" min="0" value="30">
+      </div>
+      <div>
+        <label>年間走行距離の見込み（km）</label>
+        <select id="mileage" class="input-field">
+          <option value="5000">〜5,000km（週末のみ）</option>
+          <option value="10000" selected>〜10,000km（通勤あり）</option>
+          <option value="15000">〜15,000km（長距離通勤）</option>
+          <option value="20000">20,000km以上</option>
+        </select>
+      </div>
+    </div>
+    <button class="btn-primary mt-5" onclick="calculate()">比較・診断する →</button>
+  </div>
+
+  <div id="results" class="card p-6 mb-4" style="display:none;">
+    <h2 class="font-bold text-gray-800 mb-4">📊 比較結果</h2>
+    <div class="text-center mb-4 bg-blue-50 rounded-xl p-4">
+      <div class="text-sm text-gray-600 mb-1">あなたへのおすすめは</div>
+      <div class="text-2xl font-bold text-blue-700" id="r-winner"></div>
+      <div class="text-xs text-gray-500 mt-1" id="r-reason"></div>
+    </div>
+    <div class="grid grid-cols-3 gap-2 mb-5">
+      <div class="compare-card" id="card-lease">
+        <div class="compare-label">カーリース</div>
+        <div class="compare-value text-base" id="r-lease-monthly"></div>
+        <div class="text-xs text-gray-400">月額</div>
+      </div>
+      <div class="compare-card" id="card-loan">
+        <div class="compare-label">ローン購入</div>
+        <div class="compare-value text-base" id="r-loan-monthly"></div>
+        <div class="text-xs text-gray-400">月額換算</div>
+      </div>
+      <div class="compare-card" id="card-cash">
+        <div class="compare-label">一括購入</div>
+        <div class="compare-value text-base" id="r-cash-monthly"></div>
+        <div class="text-xs text-gray-400">月額換算</div>
+      </div>
+    </div>
+    <div class="bg-gray-50 rounded-lg p-4 mb-4 text-sm space-y-2" id="r-detail"></div>
+    <div class="bg-blue-50 rounded-lg p-3 text-xs text-blue-800" id="r-advice"></div>
+  </div>
+
+  <div id="affiliate-section" class="card p-6 mb-4" style="display:none;">
+    <h3 class="font-bold text-gray-800 mb-3">🚗 カーリースを試してみよう</h3>
+    <div class="space-y-3">
+      <div class="bg-blue-50 border border-blue-200 rounded-xl p-4">
+        <div class="font-bold text-blue-800 mb-1">定額カルモくん・マイカーリース比較</div>
+        <p class="text-xs text-gray-600 mb-3">月額1万円台〜。税金・保険・メンテ込みの安心プランも。ネットで完結・最短当日審査。</p>
+        <a href="A8_CAR_LEASE_URL_PLACEHOLDER" target="_blank" rel="noopener sponsored" class="block text-center bg-blue-600 text-white font-bold py-3 rounded-lg text-sm hover:bg-blue-700 transition">カーリースを月額で比較する →</a>
+      </div>
+    </div>
+    <div class="mt-3 text-xs text-center space-y-1">
+      <div><a href="/subscription-calculator/" class="text-blue-500 underline">サブスク費用まとめて計算 →</a></div>
+      <div><a href="/real-estate-investment-sim/" class="text-blue-500 underline">資産形成シミュレーター →</a></div>
+    </div>
+  </div>
+  <p class="text-xs text-gray-500 text-center">※参考値です。実際の費用は車種・金融機関等により異なります</p>
+</div>
+
+<script>
+var carPrices={kei:1100000,compact:1700000,sedan:2700000,suv:4000000};
+var carResiduals={kei:0.45,compact:0.40,sedan:0.35,suv:0.42}; // 5年後残価率
+
+function calculate(){
+  var carClass=document.getElementById('car-class').value;
+  var useYears=parseInt(document.getElementById('use-years').value)||5;
+  var downPayment=(parseFloat(document.getElementById('down-payment').value)||0)*10000;
+  var mileage=parseInt(document.getElementById('mileage').value)||10000;
+
+  var carPrice=carPrices[carClass];
+  var residualRate=carResiduals[carClass];
+  var loanRate=0.035; // 3.5% 実質年率
+  var maintenanceMonthly=8000; // 車検・整備
+  var insuranceMonthly=12000;
+  var taxMonthly=3000;
+
+  // カーリース月額（残価設定込み）
+  var leaseMonths=useYears*12;
+  var residualValue=carPrice*residualRate*(useYears/5);
+  var leaseBase=(carPrice-residualValue)/leaseMonths;
+  var leaseTotal=leaseBase+maintenanceMonthly+insuranceMonthly+taxMonthly;
+  // 過走行ペナルティ
+  if(mileage>10000)leaseTotal+=2000;
+
+  // ローン月額
+  var loanAmount=carPrice-downPayment;
+  var loanMonthly=loanAmount*(loanRate/12*(1+loanRate/12)**leaseMonths)/((1+loanRate/12)**leaseMonths-1);
+  var loanTotal=loanMonthly+maintenanceMonthly+insuranceMonthly+taxMonthly;
+
+  // 一括購入月額換算
+  var cashMonthly=(carPrice+maintenanceMonthly*12*useYears+insuranceMonthly*12*useYears+taxMonthly*12*useYears)/leaseMonths;
+
+  // 推薦
+  var winner,reason;
+  if(downPayment<500000&&mileage<=10000){winner='カーリース';reason='頭金が少なく走行距離が標準的なためリースがお得です';}
+  else if(useYears>=7){winner='ローン購入（長期保有）';reason='長期間乗るならローン完済後の維持費の低さが有利です';}
+  else{winner='ローン購入';reason='頭金がある程度あるためローン購入がトータルでお得です';}
+
+  document.getElementById('r-winner').textContent=winner;
+  document.getElementById('r-reason').textContent=reason;
+  document.getElementById('r-lease-monthly').textContent=Math.round(leaseTotal/1000)+'千円';
+  document.getElementById('r-loan-monthly').textContent=Math.round(loanTotal/1000)+'千円';
+  document.getElementById('r-cash-monthly').textContent=Math.round(cashMonthly/1000)+'千円';
+
+  ['lease','loan','cash'].forEach(function(m){document.getElementById('card-'+m).classList.remove('best');});
+  var winnerKey=winner.includes('リース')?'lease':'loan';
+  document.getElementById('card-'+winnerKey).classList.add('best');
+
+  document.getElementById('r-detail').innerHTML='<div class="flex justify-between"><span class="text-gray-600">車両本体価格</span><strong>'+Math.round(carPrice/10000)+'万円</strong></div><div class="flex justify-between"><span class="text-gray-600">使用期間</span><strong>'+useYears+'年（'+leaseMonths+'ヶ月）</strong></div><div class="flex justify-between"><span class="text-gray-600">月間維持費（保険・税・整備）</span><strong>'+Math.round((maintenanceMonthly+insuranceMonthly+taxMonthly)/1000)+'千円</strong></div>';
+  document.getElementById('r-advice').textContent='💡 カーリースは初期費用ゼロ・車検込みで手軽ですが、過走行ペナルティと所有権がない点に注意。長期保有するならローン・一括購入の方が総額は安くなる傾向があります。';
+
+  document.getElementById('results').style.display='block';
+  document.getElementById('affiliate-section').style.display='block';
+  document.getElementById('results').scrollIntoView({behavior:'smooth'});
+}
+</script>
+</body>
+</html>
