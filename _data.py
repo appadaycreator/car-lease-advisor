@@ -1,0 +1,20 @@
+LEGACY_HTML = True  # 既存HTMLを保持（再アセンブル禁止）
+TITLE = 'カーリース vs 購入診断 - どっちがお得か無料シミュレーション'
+DESCRIPTION = '車の購入方法（カーリース・ローン購入・一括購入）を比較。乗りたい車・月額予算・使用年数を入力するだけで総費用・月額コストを比較して最適な方法を診断します。'
+JS_CODE = 'var carPrices={kei:1100000,compact:1700000,sedan:2700000,suv:4000000};\nvar carResiduals={kei:0.45,compact:0.40,sedan:0.35,suv:0.42}; // 5年後残価率\n\nfunction calculate(){\n  var carClass=document.getElementById(\'car-class\').value;\n  var useYears=parseInt(document.getElementById(\'use-years\').value)||5;\n  var downPayment=(parseFloat(document.getElementById(\'down-payment\').value)||0)*10000;\n  var mileage=parseInt(document.getElementById(\'mileage\').value)||10000;\n\n  var carPrice=carPrices[carClass];\n  var residualRate=carResiduals[carClass];\n  var loanRate=0.035; // 3.5% 実質年率\n  var maintenanceMonthly=8000; // 車検・整備\n  var insuranceMonthly=12000;\n  var taxMonthly=3000;\n\n  // カーリース月額（残価設定込み）\n  var leaseMonths=useYears*12;\n  var residualValue=carPrice*residualRate*(useYears/5);\n  var leaseBase=(carPrice-residualValue)/leaseMonths;\n  var leaseTotal=leaseBase+maintenanceMonthly+insuranceMonthly+taxMonthly;\n  // 過走行ペナルティ\n  if(mileage>10000)leaseTotal+=2000;\n\n  // ローン月額\n  var loanAmount=carPrice-downPayment;\n  var loanMonthly=loanAmount*(loanRate/12*(1+loanRate/12)**leaseMonths)/((1+loanRate/12)**leaseMonths-1);\n  var loanTotal=loanMonthly+maintenanceMonthly+insuranceMonthly+taxMonthly;\n\n  // 一括購入月額換算\n  var cashMonthly=(carPrice+maintenanceMonthly*12*useYears+insuranceMonthly*12*useYears+taxMonthly*12*useYears)/leaseMonths;\n\n  // 推薦\n  var winner,reason;\n  if(downPayment<500000&&mileage<=10000){winner=\'カーリース\';reason=\'頭金が少なく走行距離が標準的なためリースがお得です\';}\n  else if(useYears>=7){winner=\'ローン購入（長期保有）\';reason=\'長期間乗るならローン完済後の維持費の低さが有利です\';}\n  else{winner=\'ローン購入\';reason=\'頭金がある程度あるためローン購入がトータルでお得です\';}\n\n  document.getElementById(\'r-winner\').textContent=winner;\n  document.getElementById(\'r-reason\').textContent=reason;\n  document.getElementById(\'r-lease-monthly\').textContent=Math.round(leaseTotal/1000)+\'千円\';\n  document.getElementById(\'r-loan-monthly\').textContent=Math.round(loanTotal/1000)+\'千円\';\n  document.getElementById(\'r-cash-monthly\').textContent=Math.round(cashMonthly/1000)+\'千円\';\n\n  [\'lease\',\'loan\',\'cash\'].forEach(function(m){document.getElementById(\'card-\'+m).classList.remove(\'best\');});\n  var winnerKey=winner.includes(\'リース\')?\'lease\':\'loan\';\n  document.getElementById(\'card-\'+winnerKey).classList.add(\'best\');\n\n  document.getElementById(\'r-detail\').innerHTML=\'<div class="flex justify-between"><span class="text-gray-600">車両本体価格</span><strong>\'+Math.round(carPrice/10000)+\'万円</strong></div><div class="flex justify-between"><span class="text-gray-600">使用期間</span><strong>\'+useYears+\'年（\'+leaseMonths+\'ヶ月）</strong></div><div class="flex justify-between"><span class="text-gray-600">月間維持費（保険・税・整備）</span><strong>\'+Math.round((maintenanceMonthly+insuranceMonthly+taxMonthly)/1000)+\'千円</strong></div>\';\n  document.getElementById(\'r-advice\').textContent=\'💡 カーリースは初期費用ゼロ・車検込みで手軽ですが、過走行ペナルティと所有権がない点に注意。長期保有するならローン・一括購入の方が総額は安くなる傾向があります。\';\n\n  document.getElementById(\'results\').style.display=\'block\';\n  document.getElementById(\'affiliate-section\').style.display=\'block\';\n  document.getElementById(\'results\').scrollIntoView({behavior:\'smooth\'});\n}'
+MAIN_HTML = '<div><button class="btn">開始する</button></div>'
+FAQ = [
+    ('カーリース vs 購入診断 - どっちがお得か無料シミュレーションは無料で使えますか？', 'はい、完全無料・登録不要でご利用いただけます。'),
+    ('何回でも使えますか？', 'はい、回数制限なく何度でもご利用いただけます。'),
+    ('入力したデータはサーバーに送信されますか？', 'いいえ。すべての処理はブラウザ内で完結し、入力内容はサーバーへ送信されません。'),
+    ('スマートフォンでも使えますか？', 'はい、スマートフォン・タブレット・PCすべてに最適化されています。'),
+    ('結果を保存・共有できますか？', 'スクリーンショットでの保存またはSNSシェアボタンからご共有いただけます。'),
+]
+HOW_TO = [
+    'ページを開き、入力フォームの項目を確認する',
+    '必要な情報を入力または選択する',
+    '実行ボタンをクリックして結果を取得する',
+    '表示された結果・アドバイスを確認する',
+    '必要に応じてコピー・SNSシェアで活用する',
+]
+FOOTER_LINKS = [('https://appadaycreator.com/sleep-quality-checker/', '睡眠の質チェッカー'), ('https://appadaycreator.com/bmi-body-tracker/', 'BMI・体重管理'), ('https://appadaycreator.com/household-budget-analyzer/', '家計簿診断')]
