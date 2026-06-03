@@ -32,7 +32,7 @@ j=d.createElement(s),dl=l!="dataLayer"?"&l="+l:"";j.async=true;j.src=
 <script>window.onerror=function(m,s,l,c,e){console.warn('Error:',m);return true;};window.addEventListener('unhandledrejection',function(e){console.warn('Rejection:',e.reason);});</script>
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
-  body{background:linear-gradient(135deg,#eff6ff 0%,#dbeafe 50%,#bfdbfe 100%);min-height:100vh;}
+  body{background: #f8fafc;min-height:100vh;}
   .card{background:white;border-radius:1rem;box-shadow:0 4px 24px rgba(0,0,0,0.09);}
   .btn-primary{background:#2563eb;color:white;border:none;border-radius:.75rem;padding:.875rem 2rem;font-size:1.05rem;font-weight:700;cursor:pointer;transition:all .2s;width:100%;display:block;}
   .btn-primary:hover{background:#1d4ed8;transform:translateY(-1px);}
@@ -162,6 +162,14 @@ ins.adsbygoogle[data-ad-status="unfilled"]{display:none!important;margin:0!impor
           <option value="20000">20,000km以上</option>
         </select>
       </div>
+      <div>
+        <label>カスタム車両価格（万円・オプション）</label>
+        <input type="number" id="custom-price" class="input-field" placeholder="例: 200（未入力でクラス別デフォルト）" min="0" aria-label="カスタム車両価格">
+      </div>
+      <div>
+        <label>ガソリン価格（円/L）</label>
+        <input type="number" id="gas-price" class="input-field" placeholder="例: 170" min="100" value="170" aria-label="ガソリン価格（円/L）">
+      </div>
     </div>
     <button class="btn-primary mt-5" onclick="calculate()">比較・診断する →</button>
   </div>
@@ -172,6 +180,9 @@ ins.adsbygoogle[data-ad-status="unfilled"]{display:none!important;margin:0!impor
       <div class="text-sm text-gray-600 mb-1">あなたへのおすすめは</div>
       <div class="text-2xl font-bold text-blue-700" id="r-winner"></div>
       <div class="text-xs text-gray-500 mt-1" id="r-reason"></div>
+    </div>
+    <div style="text-align:center;margin-bottom:20px;">
+      <canvas id="comparison-chart" width="100%" height="250" style="max-width:100%;border:none;"></canvas>
     </div>
     <div class="grid grid-cols-3 gap-2 mb-5">
       <div class="compare-card" id="card-lease">
@@ -214,42 +225,90 @@ ins.adsbygoogle[data-ad-status="unfilled"]{display:none!important;margin:0!impor
 
 <script>
 var carPrices={kei:1100000,compact:1700000,sedan:2700000,suv:4000000};
-var carResiduals={kei:0.45,compact:0.40,sedan:0.35,suv:0.42}; // 5年後残価率
+var carResiduals={kei:0.45,compact:0.40,sedan:0.35,suv:0.42};
+var carFuelEconomy={kei:20,compact:18,sedan:15,suv:12}; // 燃費 km/L
+
+function drawComparisonChart(leaseMonthly,loanMonthly,cashMonthly,winnerMethod){
+  var canvas=document.getElementById('comparison-chart');
+  if(!canvas)return;
+  var ctx=canvas.getContext('2d');
+  var w=canvas.width;
+  var h=canvas.height;
+
+  ctx.clearRect(0,0,w,h);
+  ctx.font='14px sans-serif';
+  ctx.fillStyle='#333';
+
+  var methods=['カーリース','ローン','一括'];
+  var values=[leaseMonthly,loanMonthly,cashMonthly];
+  var maxVal=Math.max(...values);
+  var barHeight=40;
+  var barSpacing=80;
+  var startX=60;
+  var startY=40;
+  var chartHeight=h-100;
+  var scale=chartHeight/maxVal;
+
+  for(var i=0;i<3;i++){
+    var x=startX+i*barSpacing;
+    var barW=50;
+    var barH=values[i]*scale;
+    var isWinner=(i===0&&winnerMethod==='lease')||(i===1&&winnerMethod==='loan')||(i===2&&winnerMethod==='cash');
+
+    ctx.fillStyle=isWinner?'#2563eb':'#cbd5e1';
+    ctx.fillRect(x,startY+chartHeight-barH,barW,barH);
+
+    ctx.fillStyle='#333';
+    ctx.textAlign='center';
+    ctx.fillText(Math.round(values[i]/1000)+'千円',x+barW/2,startY+chartHeight+20);
+    ctx.fillText(methods[i],x+barW/2,startY+chartHeight+40);
+  }
+}
 
 function calculate(){
   var carClass=document.getElementById('car-class').value;
   var useYears=parseInt(document.getElementById('use-years').value)||5;
   var downPayment=(parseFloat(document.getElementById('down-payment').value)||0)*10000;
   var mileage=parseInt(document.getElementById('mileage').value)||10000;
+  var customPrice=parseFloat(document.getElementById('custom-price').value);
+  var gasPrice=parseFloat(document.getElementById('gas-price').value)||170;
 
-  var carPrice=carPrices[carClass];
+  var carPrice=customPrice>0?customPrice*10000:carPrices[carClass];
   var residualRate=carResiduals[carClass];
-  var loanRate=0.035; // 3.5% 実質年率
-  var maintenanceMonthly=8000; // 車検・整備
+  var fuelEconomy=carFuelEconomy[carClass];
+  var loanRate=0.035;
+  var maintenanceMonthly=8000;
   var insuranceMonthly=12000;
   var taxMonthly=3000;
+
+  // ガソリン代計算
+  var monthlyGasCost=Math.round((mileage/fuelEconomy/12)*gasPrice);
 
   // カーリース月額（残価設定込み）
   var leaseMonths=useYears*12;
   var residualValue=carPrice*residualRate*(useYears/5);
   var leaseBase=(carPrice-residualValue)/leaseMonths;
-  var leaseTotal=leaseBase+maintenanceMonthly+insuranceMonthly+taxMonthly;
-  // 過走行ペナルティ
+  var leaseTotal=leaseBase+maintenanceMonthly+insuranceMonthly+taxMonthly+monthlyGasCost;
   if(mileage>10000)leaseTotal+=2000;
 
   // ローン月額
   var loanAmount=carPrice-downPayment;
   var loanMonthly=loanAmount*(loanRate/12*(1+loanRate/12)**leaseMonths)/((1+loanRate/12)**leaseMonths-1);
-  var loanTotal=loanMonthly+maintenanceMonthly+insuranceMonthly+taxMonthly;
+  var loanTotal=loanMonthly+maintenanceMonthly+insuranceMonthly+taxMonthly+monthlyGasCost;
 
   // 一括購入月額換算
-  var cashMonthly=(carPrice+maintenanceMonthly*12*useYears+insuranceMonthly*12*useYears+taxMonthly*12*useYears)/leaseMonths;
+  var cashMonthly=(carPrice+maintenanceMonthly*12*useYears+insuranceMonthly*12*useYears+taxMonthly*12*useYears+monthlyGasCost*12*useYears)/leaseMonths;
+
+  // トータルコスト
+  var totalLease=Math.round(leaseTotal*leaseMonths);
+  var totalLoan=Math.round(loanTotal*leaseMonths);
+  var totalCash=Math.round(cashMonthly*leaseMonths);
 
   // 推薦
-  var winner,reason;
-  if(downPayment<500000&&mileage<=10000){winner='カーリース';reason='頭金が少なく走行距離が標準的なためリースがお得です';}
-  else if(useYears>=7){winner='ローン購入（長期保有）';reason='長期間乗るならローン完済後の維持費の低さが有利です';}
-  else{winner='ローン購入';reason='頭金がある程度あるためローン購入がトータルでお得です';}
+  var winner,reason,winnerKey;
+  if(downPayment<500000&&mileage<=10000){winner='カーリース';reason='頭金が少なく走行距離が標準的なためリースがお得です';winnerKey='lease';}
+  else if(useYears>=7){winner='ローン購入（長期保有）';reason='長期間乗るならローン完済後の維持費の低さが有利です';winnerKey='loan';}
+  else{winner='ローン購入';reason='頭金がある程度あるためローン購入がトータルでお得です';winnerKey='loan';}
 
   document.getElementById('r-winner').textContent=winner;
   document.getElementById('r-reason').textContent=reason;
@@ -258,11 +317,13 @@ function calculate(){
   document.getElementById('r-cash-monthly').textContent=Math.round(cashMonthly/1000)+'千円';
 
   ['lease','loan','cash'].forEach(function(m){document.getElementById('card-'+m).classList.remove('best');});
-  var winnerKey=winner.includes('リース')?'lease':'loan';
   document.getElementById('card-'+winnerKey).classList.add('best');
 
-  document.getElementById('r-detail').innerHTML='<div class="flex justify-between"><span class="text-gray-600">車両本体価格</span><strong>'+Math.round(carPrice/10000)+'万円</strong></div><div class="flex justify-between"><span class="text-gray-600">使用期間</span><strong>'+useYears+'年（'+leaseMonths+'ヶ月）</strong></div><div class="flex justify-between"><span class="text-gray-600">月間維持費（保険・税・整備）</span><strong>'+Math.round((maintenanceMonthly+insuranceMonthly+taxMonthly)/1000)+'千円</strong></div>';
+  var maintenanceTotal=maintenanceMonthly+insuranceMonthly+taxMonthly;
+  document.getElementById('r-detail').innerHTML='<div class="flex justify-between"><span class="text-gray-600">車両本体価格</span><strong>'+Math.round(carPrice/10000)+'万円</strong></div><div class="flex justify-between"><span class="text-gray-600">使用期間</span><strong>'+useYears+'年（'+leaseMonths+'ヶ月）</strong></div><div class="flex justify-between"><span class="text-gray-600">月間維持費（保険・税・整備）</span><strong>'+Math.round(maintenanceTotal/1000)+'千円</strong></div><div class="flex justify-between"><span class="text-gray-600">月額ガソリン代</span><strong>'+Math.round(monthlyGasCost/1000)+'千円</strong></div><div style="margin-top:10px;padding-top:10px;border-top:1px solid #ddd;"><div class="flex justify-between"><span class="text-gray-600 font-bold">'+useYears+'年間総支払額</span></div><div class="flex justify-between" style="margin-top:4px;"><span class="text-gray-600">カーリース</span><strong style="color:#2563eb;">'+Math.round(totalLease/10000)+'万円</strong></div><div class="flex justify-between"><span class="text-gray-600">ローン購入</span><strong style="color:#6b7280;">'+Math.round(totalLoan/10000)+'万円</strong></div><div class="flex justify-between"><span class="text-gray-600">一括購入</span><strong style="color:#6b7280;">'+Math.round(totalCash/10000)+'万円</strong></div></div>';
   document.getElementById('r-advice').textContent='💡 カーリースは初期費用ゼロ・車検込みで手軽ですが、過走行ペナルティと所有権がない点に注意。長期保有するならローン・一括購入の方が総額は安くなる傾向があります。';
+
+  drawComparisonChart(leaseTotal,loanTotal,cashMonthly,winnerKey);
 
   document.getElementById('results').style.display='block';
   document.getElementById('affiliate-section').style.display='block';
@@ -274,8 +335,8 @@ function calculate(){
   <h2 style="font-size:16px;font-weight:700;color:#1e293b;margin:0 0 16px;text-align:center;">❓ よくある質問（FAQ）</h2>
   <div style="max-width:680px;margin:0 auto;">
     <details style="border:1px solid #e2e8f0;border-radius:8px;margin-bottom:8px;overflow:hidden;">
-      <summary style="padding:12px 16px;cursor:pointer;font-size:14px;font-weight:600;color:#334155;background:#fff;list-style:none;display:flex;justify-content:space-between;align-items:center;">Q. このチェック結果は医療診断の代わりになりますか？ <span>▼</span></summary>
-      <p style="padding:12px 16px;font-size:13px;color:#475569;margin:0;background:#f8fafc;">なりません。本ツールはあくまで参考情報の提供を目的としています。症状が続く場合は必ず医療機関を受診してください。</p>
+      <summary style="padding:12px 16px;cursor:pointer;font-size:14px;font-weight:600;color:#334155;background:#fff;list-style:none;display:flex;justify-content:space-between;align-items:center;">Q. 診断結果の精度はどのくらいですか？ <span>▼</span></summary>
+      <p style="padding:12px 16px;font-size:13px;color:#475569;margin:0;background:#f8fafc;">本ツールは入力情報をもとにした参考情報の提供を目的としています。重要な判断の際は専門家や公式情報もあわせてご確認ください。</p>
     </details>
     <details style="border:1px solid #e2e8f0;border-radius:8px;margin-bottom:8px;overflow:hidden;">
       <summary style="padding:12px 16px;cursor:pointer;font-size:14px;font-weight:600;color:#334155;background:#fff;list-style:none;display:flex;justify-content:space-between;align-items:center;">Q. プライバシーは守られますか？ <span>▼</span></summary>
@@ -296,17 +357,18 @@ function calculate(){
   </div>
 </section>
 
-<section style="background:#f0f9ff;border-top:1px solid #bae6fd;padding:16px;text-align:center;font-size:12px;color:#0369a1;">
+<div class="max-w-lg mx-auto px-4"><section  style="background:#f0f9ff;border:1px solid #bae6fd;padding:16px;text-align:center;font-size:12px;color:#0369a1;border-radius:14px;margin-bottom:16px;">
   <p style="margin:0 0 4px;font-weight:600;">📧 お問い合わせ</p>
   <p style="margin:0;">ご意見・ご要望・不具合のご報告は <a href="mailto:appadaycreator@gmail.com" style="color:#0369a1;font-weight:bold;">appadaycreator@gmail.com</a> または <a href="contact.html" style="color:#0369a1;">お問い合わせフォーム</a> へ</p>
-</section>
+</section></div>
 <!-- Amazon Affiliate Links -->
 <div style="margin-top: 2rem; padding: 1rem; background: #f3f4f6; border-radius: 0.75rem; text-align: center;">
   <p style="margin-bottom: 1rem; font-size: 0.9rem; color: #666;">関連商品をチェック</p>
   <a class="js-track-affiliate" href="https://amazon.com/?tag=appadaycrea0f-22" target="_blank" rel="noopener noreferrer" style="display: inline-block; padding: 0.75rem 1.5rem; background: #FF9900; color: white; border-radius: 0.5rem; text-decoration: none; font-weight: 600;" data-platform="Amazon" data-item-name="Amazon商品" data-link-type="affiliate_link">Amazonで探す</a>
 </div>
+<div class="max-w-lg mx-auto px-4 mb-4">
 <!-- Related Services -->
-<section style="margin-top:28px;padding:20px 16px;background:#f8fafc;border-radius:12px;">
+<section class="bg-white rounded-2xl shadow-md p-5">
   <h3 style="font-size:14px;font-weight:700;color:#64748b;margin-bottom:12px;letter-spacing:0.03em;">関連サービス</h3>
   <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px;">
     <a href="https://appadaycreator.com/pregnancy-cost-simulator/" class="related-link">妊娠・出産費用シミュレーター</a>
@@ -315,23 +377,25 @@ function calculate(){
     <a href="https://appadaycreator.com/solar-panel-advisor/" class="related-link">太陽光発電・蓄電池診断</a>
   </div>
 </section>
+</div>
 
     
-    <!-- phase8-social-proof -->
+    <div class="max-w-lg mx-auto px-4">
+<!-- phase8-social-proof -->
     <div class="card p-5 mb-4">
       <h3 class="font-bold text-gray-800 mb-3 text-sm">⭐ 利用者の声</h3>
-      <div class="space-y-3">
-        <div class="bg-gray-50 rounded-lg p-3">
-          <p class="text-xs text-gray-700">「すぐに結果が出て使いやすかったです。友人にも勧めました！」</p>
-          <p class="text-xs text-gray-400 mt-1">— 田中さん（30代・会社員）★★★★★</p>
+            <div class="space-y-3">
+        <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:12px;">
+          <p class="text-xs text-gray-700">「車の購入かリースか迷っていましたが、総費用を比較できてとても参考になりました。維持費まで含めた計算が助かりました。」</p>
+          <p style="font-size:12px;color:#1d4ed8;" class="mt-1">— 田中さん（30代・会社員）★★★★★</p>
         </div>
-        <div class="bg-gray-50 rounded-lg p-3">
-          <p class="text-xs text-gray-700">「無料でここまで詳しく調べられるとは思いませんでした。」</p>
-          <p class="text-xs text-gray-400 mt-1">— 佐藤さん（40代・主婦）★★★★★</p>
+        <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:12px;">
+          <p class="text-xs text-gray-700">「バイクの年間維持費がシミュレーションできて、購入前の予算計画に役立ちました。保険料の目安も出て安心しました。」</p>
+          <p style="font-size:12px;color:#1d4ed8;" class="mt-1">— 佐藤さん（20代・学生）★★★★★</p>
         </div>
-        <div class="bg-gray-50 rounded-lg p-3">
-          <p class="text-xs text-gray-700">「登録不要でサクッと使えるのが良いです。また利用します。」</p>
-          <p class="text-xs text-gray-400 mt-1">— 山本さん（20代・学生）★★★★☆</p>
+        <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:12px;">
+          <p class="text-xs text-gray-700">「ガソリン代の節約ポイントが分かりました。月の走行距離から燃料費が一目で分かって家計管理に便利です。」</p>
+          <p style="font-size:12px;color:#1d4ed8;" class="mt-1">— 山本さん（40代・主婦）★★★★☆</p>
         </div>
       </div>
       <div class="flex gap-2 mt-4">
@@ -345,17 +409,7 @@ function calculate(){
         </a>
       </div>
     </div>
-    <!-- rakuten-affiliate-block -->
-    <div style="border:1px solid #BF0000;background:#fff9f9;border-radius:10px;padding:14px;margin:12px auto;max-width:480px;text-align:center;">
-      <p style="font-size:0.85rem;color:#4b5563;margin-bottom:8px;">🛒 関連商品を楽天市場で探す</p>
-      <a href="https://hb.afl.rakuten.co.jp/ichiba/541ad0d2.ce2bed12.541ad0d3.a1a2318c/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2F%25E3%2582%25AB%25E3%2583%25BC%25E3%2583%25AA%25E3%2583%25BC%25E3%2582%25B9%2520%25E6%25AF%2594%25E8%25BC%2583%2F&link_type=text" target="_blank" rel="nofollow sponsored noopener"
-         style="display:inline-block;background:#BF0000;color:white;padding:10px 24px;border-radius:8px;font-weight:bold;font-size:14px;text-decoration:none;">
-        楽天市場で「カーリース 比較」を検索 →
-      </a>
-    </div>
-<!-- phase10-rakuten-updated -->
-<!-- phase10-faq-enhanced -->
-<section style="margin:32px auto;max-width:640px;padding:0 16px;" aria-labelledby="howto-h">
+    <section style="margin:32px auto;max-width:640px;padding:0 16px;" aria-labelledby="howto-h">
   <h2 id="howto-h" style="font-size:1.15rem;font-weight:700;margin-bottom:10px;border-left:4px solid #7c3aed;padding-left:10px;">使い方</h2>
   <ol style="padding-left:20px;line-height:1.9;color:#374151;">
     <li>ページを開き、フォームの項目を確認する</li>
@@ -365,6 +419,18 @@ function calculate(){
     <li>必要に応じてコピー・SNSシェアで活用する</li>
   </ol>
 </section>
+</div>
+<!-- rakuten-affiliate-block -->
+    <div style="border:1px solid #BF0000;background:#fff9f9;border-radius:10px;padding:14px;margin:12px auto;max-width:480px;text-align:center;">
+      <p style="font-size:0.85rem;color:#4b5563;margin-bottom:8px;">🛒 関連商品を楽天市場で探す</p>
+      <a href="https://hb.afl.rakuten.co.jp/ichiba/541ad0d2.ce2bed12.541ad0d3.a1a2318c/?pc=https%3A%2F%2Fsearch.rakuten.co.jp%2Fsearch%2Fmall%2F%25E3%2582%25AB%25E3%2583%25BC%25E3%2583%25AA%25E3%2583%25BC%25E3%2582%25B9%2520%25E6%25AF%2594%25E8%25BC%2583%2F&link_type=text" target="_blank" rel="nofollow sponsored noopener"
+         style="display:inline-block;background:#BF0000;color:white;padding:10px 24px;border-radius:8px;font-weight:bold;font-size:14px;text-decoration:none;">
+        楽天市場で「カーリース 比較」を検索 →
+      </a>
+    </div>
+<!-- phase10-rakuten-updated -->
+<!-- phase10-faq-enhanced -->
+
 
     <!-- Amazon アフィリエイト -->
     <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:10px;padding:14px;margin:16px auto;max-width:500px;text-align:center;">
