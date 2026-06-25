@@ -100,7 +100,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Yu Gothic',sa
 /* ===== HERO ===== */
 .hero{position:relative;overflow:hidden}
 .hero-photo{position:absolute;inset:0;background-image:url('assets/photos/photo_01.jpg');background-size:cover;background-position:center}
-.hero-overlay{position:absolute;inset:0;background:linear-gradient(120deg,rgba(10,20,60,.88) 0%,rgba(30,64,175,.78) 60%,rgba(10,20,60,.6) 100%)}
+.hero-overlay{position:absolute;inset:0;background:linear-gradient(to right,rgba(10,25,80,.86) 0%,rgba(20,55,160,.72) 48%,rgba(30,70,200,.32) 100%)}
 .hero-inner{position:relative;max-width:1100px;margin:0 auto;padding:56px 24px 64px;display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:center}
 .hero-text{color:#fff}
 .hero-badge-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
@@ -126,6 +126,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Yu Gothic',sa
 .hm-val{font-size:.82rem;font-weight:900;color:var(--primary)}
 .hm-total{font-size:.58rem;color:#94a3b8;margin-top:1px}
 .hm-photo{width:100%;height:80px;object-fit:cover;border-radius:10px;margin-top:12px}
+.hero-person-img{width:100%;height:160px;object-fit:cover;object-position:center 20%;border-radius:16px;box-shadow:0 10px 32px rgba(0,0,0,.4);margin-bottom:12px;display:block}
+@media(max-width:800px){.hero-person-img{display:none}}
 
 @media(max-width:800px){
   .hero-inner{grid-template-columns:1fr}
@@ -359,6 +361,7 @@ ins.adsbygoogle[data-ad-status="unfilled"]{display:none!important;margin:0!impor
       </div>
     </div>
     <div class="hero-mockup">
+      <img src="assets/photos/photo_14.jpg" class="hero-person-img" alt="カーリース相談">
       <p class="hm-title">診断結果イメージ</p>
       <div class="hm-score">
         <span class="hm-badge">リース向き</span>
